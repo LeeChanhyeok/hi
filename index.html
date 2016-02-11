@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html ng-app="SmartMirror">
   <head>
-       <meta charset="utf-8"/>
     <title>Smart Mirror</title>
+          <meta charset="utf-8"/>
     <!-- Libraries -->
     <script src="js/annyang.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js"></script>
@@ -18,38 +18,44 @@
     <script src="js/map-service.js"></script>
     <script src="js/hue-service.js"></script>
     <script src="js/geolocation-service.js"></script>
+    <script src="js/calendar-service.js"></script>
+    <script src="js/dateFormatFilter.js"></script>
     <script src="js/controller.js"></script>
-    <script src="js/facebook.js"></script>
+      <script src="js/facebook.js"></script>
     <!-- Styles and Resources -->
     <link rel="shortcut icon" href="favicon.ico" />
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,800,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/main.css" />
-              <script src="http://code.jquery.com/jquery-2.2.0.min.js"></script>
-    
-      
   </head>
   <body ng-controller="MirrorCtrl as commands">
     <div class="top">
       <div class="top-left">
         <div class="date grey">{{date | date : 'EEEE, MMMM d yyyy'}}</div>
         <div class="time">{{date | date : 'hh:mm a'}}</div>
+        <ul class="calendar fade" ng-show="focus == 'default'">
+            <li class="event" ng-repeat="event in calendar">
+                <div class="event-details">
+                    <span class="day">{{event.start.format('dddd') | uppercase}}</span>
+                    <span class="summary">{{event.SUMMARY}}</span>
+                    <div class="details">{{event.start.format('MMMM Do YYYY, h:mm:ss a')}}</div>
+                    </li>
+                </div>
+        </ul>
       </div>
-        <div class="top-right">
+      <div class="top-right">
         <div class="weather">
           <div class="weather-today">
-            <span class="tempreture">{{((currentForcast.temperature-32)*(5.0/9.0)).toFixed(2)}}&deg;</span>
+            <span class="tempreture">{{currentForcast.temperature}}&deg;</span>
           </div>
-        
           <div class="weather-week" ng-repeat="forcast in weeklyForcast.data" ng-if="$index > 0">
             <div class="weather-week-day">
               <span class="day light-grey">{{forcast.day}}</span>
-              <span class="tempreture tempreture-min">{{((forcast.temperatureMin-32)*(5.0/9.0)).toFixed(2)}}</span>
-              <span class="tempreture tempreture-max">{{((forcast.temperatureMax-32)*(5.0/9.0)).toFixed(2)}}</span>
+              <span class="tempreture tempreture-min">{{forcast.temperatureMin}}</span>
+              <span class="tempreture tempreture-max">{{forcast.temperatureMax}}</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
     <div class="container">
       <div class="middle-center">
@@ -59,27 +65,22 @@
         <div class="map-container animate-grow" ng-show="focus == 'map'">
           <img class="map animate-grow" ng-src="{{map}}"/>
         </div>
-          
-          <div class="facebook-container animate-grow" ng-show="focus == 'facebook'">
-    <div class="fb-page" data-href="https://www.facebook.com/smartmirror1/" data-tabs="timeline" data-small-header="true" data-adapt-container-width="false" data-hide-cover="true" data-show-facepile="false">
-      <div class="fb-xfbml-parse-ignore"><blockquote cite="https://www.facebook.com/smartmirror1/">
-        <a href="https://www.facebook.com/smartmirror1/">스마트미러</a></blockquote></div></div>
-          </div>
-              
       </div>
       <div class="bottom-center">
         <!-- Command list -->
         <div class="commands animate-grow" ng-show="focus == 'commands'">
           <h2>명령어</h2>
           <dl>
-            <dt>메뉴</dt>
-            <dd>음성인식 메뉴</dd>
-            <dt>메인 화면</dt>
-            <dd>메인 화면으로 이동</dd>
+            <dt>Menu</dt>
+            <dd>메뉴보기</dd>
+            <dt>home</dt>
+            <dd>홈화면가기</dd>
             <dt>거울</dt>
-            <dd>거울 화면으로 전환</dd>
+            <dd>거울보기</dd>
             <dt>지도</dt>
-            <dd>지도 보기(확대, 축소)</dd>
+            <dd>현재 위치 보기</dd>
+            <dt>지도 ________</dt>
+            <dd>지역 위치 보기</dd>
             <dt>페이스북</dt>
             <dd>페이스북 페이지 플러그인</dd>
           </dl>
@@ -89,7 +90,12 @@
             and Electron <script>document.write(process.versions.electron)</script>.
           </small>
         </div>
-
+ <div class="facebook-container animate-grow" ng-show="focus == 'facebook'">
+    <div class="fb-page" data-href="https://www.facebook.com/smartmirror1/" data-tabs="timeline" data-small-header="true" data-adapt-container-width="false" data-hide-cover="true" data-show-facepile="false">
+      <div class="fb-xfbml-parse-ignore"><blockquote cite="https://www.facebook.com/smartmirror1/">
+        <a href="https://www.facebook.com/smartmirror1/">스마트미러</a></blockquote></div></div>
+          </div>
+         
         <div class="interim-result" ng-bind="interimResult"></div>
       </div>
       <div class="colors animate-grow" ng-show="focus == 'colors'">

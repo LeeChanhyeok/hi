@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
 
-    function MirrorCtrl(AnnyangService, GeolocationService, WeatherService, MapService, HueService, $scope, $timeout, $interval) {
+    function MirrorCtrl(AnnyangService, GeolocationService, WeatherService, MapService, HueService, CalendarService, $scope, $timeout, $interval) {
         var _this = this;
-        var DEFAULT_COMMAND_TEXT = '"메뉴" 라고 말해보세요';
+        var DEFAULT_COMMAND_TEXT = '"Menu" 라고 말해보세요';
         $scope.listening = false;
         $scope.debug = false;
         $scope.complement = "세종텔레콤"
@@ -17,7 +17,7 @@
         function updateTime(){
             $scope.date = new Date();
         }
-            
+
 
         // Reset the command text
         var restCommand = function(){
@@ -25,26 +25,33 @@
         }
 
         _this.init = function() {
-           
-
-            //Get our location and then get the weather for our location
-            GeolocationService.getLocation().then(function(geoposition){
-                 var tick = $interval(updateTime, 1000);
+            var tick = $interval(updateTime, 1000);
             updateTime();
-            $scope.map = MapService.generateMap(geoposition.coords.latitude+','+geoposition.coords.longitude);
+            $scope.map = MapService.generateMap("서울특별시 강동구 상일동 349-1");
             _this.clearResults();
             restCommand();
-                console.log("Geoposition", geoposition);
-                WeatherService.init(geoposition).then(function(){
-                    $scope.currentForcast = WeatherService.currentForcast();
-                    $scope.weeklyForcast = WeatherService.weeklyForcast();
-                    console.log("Current", $scope.currentForcast);
-                    console.log("Weekly", $scope.weeklyForcast);
-                    //refresh the weather every hour
-                    //this doesn't acutually updat the UI yet
-                    //$timeout(WeatherService.refreshWeather, 3600000);
+
+            var refreshMirrorData = function() {
+                //Get our location and then get the weather for our location
+                GeolocationService.getLocation({enableHighAccuracy: true}).then(function(geoposition){
+                    console.log("Geoposition", geoposition);
+                    WeatherService.init(geoposition).then(function(){
+                        $scope.currentForcast = WeatherService.currentForcast();
+                        $scope.weeklyForcast = WeatherService.weeklyForcast();
+                        console.log("Current", $scope.currentForcast);
+                        console.log("Weekly", $scope.weeklyForcast);
+                    });
                 });
-            })
+
+                var promise = CalendarService.renderAppointments();
+                promise.then(function(response) {
+                    $scope.calendar = CalendarService.getFutureEvents();
+                }, function(error) {
+                    console.log(error);
+                });
+            };
+
+            $timeout(refreshMirrorData(), 3600000);
 
             //Initiate Hue communication
             HueService.init();
@@ -62,7 +69,7 @@
             });
 
             // Go back to default view
-            AnnyangService.addCommand('메인화면', defaultView);
+            AnnyangService.addCommand('홈화면', defaultView);
 
             // Hide everything and "sleep"
             AnnyangService.addCommand('거울', function() {
@@ -71,31 +78,30 @@
             });
 
             // Go back to default view
-            AnnyangService.addCommand('일어나', defaultView);
+            AnnyangService.addCommand('메인화면', defaultView);
 
             // Hide everything and "sleep"
             AnnyangService.addCommand('Show debug information', function() {
                 console.debug("Boop Boop. Showing debug info...");
                 $scope.debug = true;
             });
-            AnnyangService.addCommand('페이스북', function() {
-                console.debug("Going on an adventure?");
-                $scope.focus = "facebook";
-            });
 
             // Hide everything and "sleep"
-            AnnyangService.addCommand('현재위치', function() {
+            AnnyangService.addCommand('지도', function() {
                 console.debug("Going on an adventure?");
                 $scope.focus = "map";
             });
 
             // Hide everything and "sleep"
-            AnnyangService.addCommand('(지도) *location', function(location) {
+            AnnyangService.addCommand('지도 *location', function(location) {
                 console.debug("Getting map of", location);
                 $scope.map = MapService.generateMap(location);
                 $scope.focus = "map";
             });
-
+            AnnyangService.addCommand('페이스북', function() {
+                console.debug("Going on an adventure?");
+                $scope.focus = "facebook";
+            });
             // Zoom in map
             AnnyangService.addCommand('(지도) 확대', function() {
                 console.debug("Zoooooooom!!!");
@@ -146,7 +152,7 @@
             });
 
             // Check the time
-            AnnyangService.addCommand('시간', function(task) {
+            AnnyangService.addCommand('what time is it', function(task) {
                  console.debug("It is", moment().format('h:mm:ss a'));
                  _this.clearResults();
             });

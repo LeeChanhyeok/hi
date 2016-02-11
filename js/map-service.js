@@ -3,8 +3,8 @@
 
     function MapService() {
         var service = {};
-        service.center = ""; //default map locaiton
-        service.zoom = 13; //default zoom is 13
+        service.center = "Seattle, WA"; //default map locaiton
+        service.zoom = 15; //default zoom is 13
         // COMMANDS
         service.commands = {};
 
